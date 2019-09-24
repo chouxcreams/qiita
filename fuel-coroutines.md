@@ -8,7 +8,7 @@ KotlinでHTTP通信できるライブラリです。[こちら](https://oldbigbu
 [FuelのGitHubリポジトリ](https://github.com/kittinunf/fuel)を見るとわかると思うのですが、いろんなパッケージの集合体という形をとっています。今回利用するfuel-coroutinesはその中の一つです。
 
 ### なぜfuel-coroutinesなのか
-Fuelの特徴として「同期でも非同期でも書ける」というものがありますが、fuelのみだと非同期まわりの融通があまり効きません。結局「コルーチンを自分で用意してそこに自前で同期処理を書く」ということになります。
+Fuelの特徴として「同期でも非同期でも書ける」というものがありますが、fuelのみだと非同期まわりの融通があまり効きません。結局「自前のコルーチンに同期処理を書く」ということになります。
 
 fuel-coroutinesはKotlinのコルーチンライブラリであるKotlinX Coroutinesを利用しているため、コルーチンが扱いやすいです。
 
@@ -49,16 +49,20 @@ runBlocking {
 
 ### 画像をダウンロードする
 ```image_download.kt
+// imageにrunBlockingの計算結果を代入
 val image = runBlocking {
             val (_, _, result) = url.httpGet().awaitByteArrayResponseResult()
+
+            // http通信に成功した場合Bitmap、失敗した場合nullがdataに入る
             val data = result.fold(
-                {data-> data},
+                {res-> res},
                 {error->
-                    Log.e(jsonDownloaderName, "An error of type ${error.exception} happened: ${error.message}")
+                    Log.e(tag, "An error of type ${error.exception} happened: ${error.message}")
                     null
                 }
             )
-            BitmapFactory.decodeByteArray(data, 0, data!!.size)!! //ここでダウンロードした画像をBitmap形式に変換する。
+            //ここでダウンロードした画像をBitmap形式に変換する。
+            BitmapFactory.decodeByteArray(data, 0, data!!.size)!!
         }
 ```
 敢えてさっきとは色々違う書き方をしましたが、基本的な違いは`awaitStringResponseResult`が`awaitByteArrayResponseResult`に変わっただけです。
